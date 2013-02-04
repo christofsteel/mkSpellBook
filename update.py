@@ -66,7 +66,7 @@ for page in pages:
                     s['spellrange'] = mKeyword.group("text")
                 elif ktext == "Area:":
                     s['area'] = mKeyword.group("text")
-                elif ktext == "Target":
+                elif ktext == "Target:":
                     s['target'] = mKeyword.group("text")
                 elif ktext == "Duration:":
                     s['duration'] = mKeyword.group("text")
