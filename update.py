@@ -91,7 +91,7 @@ for page in pages:
             s['spelltext'] = re.sub(k, v, s['spelltext'])
 
         #SQLite foo magic
-        print(s['name']+"============================================================")
+        print(s['name']);
         keys = "name"
         values = "\""+s['name']+"\""
         for k in ["id", "link", "book", "edition","school", "subschool", "verbal", "somatic", "material", "arcanefocus", "divinefocus", "xpcost", "castingtime", "target", "duration", "savingthrow", "spellres", "spelltext"]:
@@ -99,20 +99,17 @@ for page in pages:
                 keys = keys + "," + k 
                 values = values + "," + "\""+ str(s[k]) + "\""
         query = "INSERT INTO spells (" + keys + ") VALUES ("+values+");"
-#        print(query)
         c.execute(query)
 
         #levels
         for k, v in s['levels'].items():
             levelquery = "INSERT INTO levels (spell, class, level) VALUES (\"" + str(s['id']) + "\", \"" + k + "\", \"" + str(v) +"\");"
- #           print(levelquery)
             c.execute(levelquery)
 
         #Descriptors
         if 'descriptor' in s:
             for descriptor in s['descriptor']:
                 descquery = "INSERT INTO descriptors (spell, descriptor) VALUES (\"" + str(s['id']) + "\", \"" + descriptor + "\");"
-  #              print(descquery)
                 c.execute(descquery)
 
         spellid = spellid + 1
