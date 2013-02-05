@@ -23,18 +23,25 @@ templatestring = template.read()
 
 con = sqlite3.connect("spells.db")
 con.row_factory = sqlite3.Row
-cur = con.cursor()
-cur.execute("select * from spells WHERE id = 2 OR id = 5 OR id = 1634 OR id = 744 OR id = 9;")
+spellcur = con.cursor()
+descriptorcur = con.cursor()
 
+spellcur.execute("select * from spells join levels on spells.id = levels.spell where (edition = 'Core (3.5)' or edition = 'Forgotten Realms (3.5)' or edition = 'Supplementals (3.5)') order by level,name;")
 
 head = open('head.tex', 'r')
 print(head.read())
-row = cur.fetchone()
+row = spellcur.fetchone()
 while row is not None:
-    cond = condition(row, templatestring)
-    replaced = replace(row, cond)
+    dictrow = dict(row)
+    descriptorcur.execute("select descriptor from descriptors where spell = " + str(row['id']))
+    drow = descriptorcur.fetchone()
+    dictrow['descriptor'] = ""
+    while drow is not None:
+        dictrow['descriptor'] += drow['descriptor']
+        drow = descriptorcur.fetchone()
+    cond = condition(dictrow, templatestring)
+    replaced = replace(dictrow, cond)
     print(replaced)
-    row = cur.fetchone()
-
+    row = spellcur.fetchone()
 tail = open('tail.tex', 'r')
 print(tail.read())
