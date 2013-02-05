@@ -11,7 +11,7 @@ replacevarregexp = re.compile('\[\[(?P<var>[^\]]*)\]\]')
 
 
 def replace(dictionary, string):
-    return replacevarregexp.sub(lambda p : dictionary[p.group("var")], string)
+    return replacevarregexp.sub(lambda p : texify(str(dictionary[p.group("var")])), string)
 
 def condition(dictionary, string):
     return conditionregexp.sub(lambda m : replace(dictionary, m.group("string")) if m.group("condition") in dictionary and dictionary[m.group("condition")] else "", string)
@@ -29,7 +29,7 @@ def texify(string):
         "\"": r"''",
         "</em>|</sup>": r"}",
         "%":r"\\%",
-        "&amp;": r"\\&",
+        "&": r" \\& ",
         u'\uFB02': r"fl", 
         "_": r"\\_",
         "×": r"x",
@@ -37,6 +37,7 @@ def texify(string):
         "<table>.*</table>": r"TODO Tabelle parsen"
     }
     string = re.sub("^\s*<p>|&#13;|</p>|\r|\n|\t", "", string)
+    string = re.sub("&amp;", "&", string)
     for k, v in replacements.items():
         string = re.sub(k, v, string, flags=re.UNICODE)
     return string
@@ -50,7 +51,7 @@ con.row_factory = sqlite3.Row
 spellcur = con.cursor()
 descriptorcur = con.cursor()
 
-spellcur.execute("select * from spells join levels on spells.id = levels.spell where (edition = 'Core (3.5)' or edition = 'Forgotten Realms (3.5)' or edition = 'Supplementals (3.5)') order by level,name;")
+spellcur.execute("select distinct * from spells join levels on spells.id = levels.spell order by level,name;")
 
 head = open('head.tex', 'r')
 print(head.read())
@@ -63,7 +64,6 @@ while row is not None:
     while drow is not None:
         dictrow['descriptor'] += drow['descriptor']
         drow = descriptorcur.fetchone()
-    dictrow['spelltext'] = texify(dictrow['spelltext'])
     cond = condition(dictrow, templatestring)
     replaced = replace(dictrow, cond)
     print(replaced)
