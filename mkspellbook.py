@@ -16,11 +16,6 @@ def replace(dictionary, string):
 def condition(dictionary, string):
     return conditionregexp.sub(lambda m : replace(dictionary, m.group("string")) if m.group("condition") in dictionary else "", string)
 
-def dict_factory(cursor, row):
-    d = {}
-    for idx, col in enumerate(cursor.description):
-        d[col[0]] = row[idx]
-        return d
 
 template = open('spell.tex', 'r')
 templatestring = template.read()

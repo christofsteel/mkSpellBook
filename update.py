@@ -90,7 +90,6 @@ for page in pages:
         for k, v in replacements.items():
             s['spelltext'] = re.sub(k, v, s['spelltext'])
 
-        #SQLite foo magic
         print(s['name']);
         keys = "name"
         values = "\""+s['name']+"\""
