@@ -13,6 +13,25 @@ To build your spell data base, run
   
 This generates you a `spells.db` with all the spells available on dndtools.eu.
 
+Edit the sql query in `mkspellbook.py` to match your spell selection.
+
+Then edit the `head.tex` to customize your spellbook.
+Lastly run
+
+    python mkspellbook.py > yourspellbook.tex
+    
+to generate your spellbook.
+
+### Print as booklet ###
+If you want to generate a booklet, this might help:
+
+    latex yourspellbook.tex
+    dvips yourspellbook.dvi
+    psbook yourspellbook_book.ps
+    psnup -s1 -2 yourspellbook_book.ps yourspellbook_booklet.ps
+    ps2pdf yourspellbook_booklet.ps yourspellbook_booklet.pdf
+    
+
 ## Schema ##
 
 The Database contains 3 tables:
