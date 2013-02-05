@@ -16,10 +16,34 @@ def replace(dictionary, string):
 def condition(dictionary, string):
     return conditionregexp.sub(lambda m : replace(dictionary, m.group("string")) if m.group("condition") in dictionary and dictionary[m.group("condition")] else "", string)
 
+def texify(string):
+    replacements = {
+        "<li>": r"\\item ",
+        "</li>": r"\n",
+        "<ul>": r"\\begin{itemize}\n",
+        "<br/>|<p>": r"\\\\ \n",
+        "</ul>(\s|<br/>|<p>)*": r"\\end{itemize}\n",
+        "<em>": r"\\textit{",
+        "<a[^>]*>|</a>": r"",
+        "<sup>": r"\\textsuperscript{",
+        "\"": r"''",
+        "</em>|</sup>": r"}",
+        "%":r"\\%",
+        "&amp;": r"\\&",
+        u'\uFB02': r"fl", 
+        "_": r"\\_",
+        "×": r"x",
+        "<span[^>]*>|</span>":r"",
+        "<table>.*</table>": r"TODO Tabelle parsen"
+    }
+    string = re.sub("^\s*<p>|&#13;|</p>|\r|\n|\t", "", string)
+    for k, v in replacements.items():
+        string = re.sub(k, v, string, flags=re.UNICODE)
+    return string
+    
 
 template = open('spell.tex', 'r')
 templatestring = template.read()
-
 
 con = sqlite3.connect("spells.db")
 con.row_factory = sqlite3.Row
@@ -39,9 +63,11 @@ while row is not None:
     while drow is not None:
         dictrow['descriptor'] += drow['descriptor']
         drow = descriptorcur.fetchone()
+    dictrow['spelltext'] = texify(dictrow['spelltext'])
     cond = condition(dictrow, templatestring)
     replaced = replace(dictrow, cond)
     print(replaced)
     row = spellcur.fetchone()
 tail = open('tail.tex', 'r')
 print(tail.read())
+

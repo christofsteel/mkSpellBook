@@ -74,22 +74,7 @@ for page in pages:
                     s['savingthrow'] = mKeyword.group("text")
                 elif ktext == "Spell Resistance:":
                     s['spellres'] = mKeyword.group("text")
-        # Text
-        paragraphs = list(spelldetail('.nice-textile p').items())
-        replacements = {
-                            "<li>": r"\\item ",
-                            "</li>": r"\n",
-                            "<ul>": r"\\begin{itemize}\n",
-                            "<br/>|<p>": r"\\\\ \n",
-                            "</ul>(\s|<br/>|<p>)*": r"\\end{itemize}\n",
-                            "<em>": r"\\textit{",
-                            "\"": r"''",
-                            "</em>": r"}"
-                        }
-        s['spelltext'] = re.sub("^\s*<p>|&#13;|</p>|\r|\n|\t", "", spelldetail('#content .nice-textile').html())
-        for k, v in replacements.items():
-            s['spelltext'] = re.sub(k, v, s['spelltext'])
-
+        s['spelltext'] =re.sub("\"", "''",  spelldetail('#content .nice-textile').html())
         print(s['name']);
         keys = "name"
         values = "\""+s['name']+"\""
@@ -98,6 +83,7 @@ for page in pages:
                 keys = keys + "," + k 
                 values = values + "," + "\""+ str(s[k]) + "\""
         query = "INSERT INTO spells (" + keys + ") VALUES ("+values+");"
+#        print(query)
         c.execute(query)
 
         #levels
