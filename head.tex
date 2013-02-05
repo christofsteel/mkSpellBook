@@ -1,13 +1,31 @@
 \documentclass[10pt,a4paper,twocolumn]{book}
-\usepackage[utf8]{inputenc}
+\usepackage[utf8x]{inputenc}
 \usepackage{amsmath}
-\usepackage[a4paper,left=1cm, right=1cm, top=1cm, bottom=1cm]{geometry}
+\usepackage{graphicx}
+\usepackage[a4paper,left=1cm, right=1cm, top=3cm, bottom=0.5cm]{geometry}
 \usepackage{supertabular}
 \usepackage[table]{xcolor}
 \usepackage{amsfonts}
 \usepackage{amssymb}
-\pagestyle{headings}
-\title{Spellbook}
+\usepackage{titlesec}
+\usepackage{fancyhdr}
+\setlength{\headheight}{15.2pt}
+\titlespacing*{\chapter}{0pt}{-20pt}{20pt}
+\titleformat{\chapter}[display]{\normalfont\huge\bfseries}{}{20pt}{\Huge}
+\fancypagestyle{plain}{
+\rhead[\leftmark]{\thepage}
+\lhead[\thepage]{\leftmark}
+\cfoot[Spellbook]{Spellbook}
+}
+\pagestyle{plain}
+
+\DeclareUnicodeCharacter{64258}{fl}
+\renewcommand{\chaptermark}[1]{\markboth{#1}{}}
+
+
+\title{Zauberbuch}
+\author{Sir Castalot}
 \begin{document}
 \maketitle
 \tableofcontents
+\setcounter{chapter}{-1}
