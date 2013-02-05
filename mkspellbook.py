@@ -14,7 +14,7 @@ def replace(dictionary, string):
     return replacevarregexp.sub(lambda p : dictionary[p.group("var")], string)
 
 def condition(dictionary, string):
-    return conditionregexp.sub(lambda m : replace(dictionary, m.group("string")) if m.group("condition") in dictionary else "", string)
+    return conditionregexp.sub(lambda m : replace(dictionary, m.group("string")) if m.group("condition") in dictionary and dictionary[m.group("condition")] else "", string)
 
 
 template = open('spell.tex', 'r')
