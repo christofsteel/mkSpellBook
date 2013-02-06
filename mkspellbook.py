@@ -3,6 +3,7 @@
 
 import sqlite3
 import re
+import argparse
 
 global conditionregexp 
 conditionregexp = re.compile('\[\[\?(?P<condition>[^\|]*)\|(?P<string>[^\?]*)\?\]\]')
@@ -42,8 +43,12 @@ def texify(string):
         string = re.sub(k, v, string, flags=re.UNICODE)
     return string
     
+parser = argparse.ArgumentParser(description="Creates a Spellbook")
+parser.add_argument("--template", "-t", default="plain")
+args = parser.parse_args()
+templatepath = "templates/" + args.template + "/"
 
-template = open('spell.tex', 'r')
+template = open(templatepath + 'spell.tex', 'r')
 templatestring = template.read()
 
 con = sqlite3.connect("spells.db")
