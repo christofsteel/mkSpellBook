@@ -28,36 +28,37 @@ class Menu:
 		else:
 			prevmenu()
 
-	def askedition(self):
-		erc, ech  = self.d.menu("Which Edition of D&D", 
-				[("1", "D&D 3.5"), ("2", "D&D 3.0")], 
+	def askruleset(self):
+		self.cur.execute("select distinct ruleset from spells")
+		rulesetsrows = self.cur.fetchall()
+		rulesets = list(map(lambda t: t[0], rulesetsrows))
+		rrc, rch  = self.d.menu("Select Ruleset", 
+				zip(map(str,range(1,len(rulesets)+1)),rulesets),
 				height=40, width=90, menu_height=33,
 				common="--extra-button --extra-label \"Save\"")
-		if ech:
-			self.edition = ech
-		self.handleret(erc, self.askclass, lambda : exit(1))
+		if rch:
+			self.ruleset = rulesets[int(rch)-1]
+		self.handleret(rrc, self.askclass, lambda : exit(1))
 
 	def askclass(self):
-		self.cur.execute("select distinct class from levels")
+		self.cur.execute("select distinct class from levels join spells on levels.spell = spells.id where ruleset='" + self.ruleset + "'")
 		classesrows = self.cur.fetchall()
 		classes = list(map(lambda t: t[0], classesrows))
 		classeschoices = zip(map(str, range(len(classes)+1)[1:]),classes)
-		crc, cch = self.d.menu("Which Spelllist?",
+		crc, cch = self.d.menu("Select Spelllist",
 				classeschoices, height=40, width=90, menu_height=33,
 				common="--extra-button --extra-label \"Save\"")
 		if cch:
 			self.d20class = classes[int(cch)-1]
-		self.handleret(crc, self.askbook, self.askedition)
+		self.handleret(crc, self.askbook, self.askruleset)
 
 	def askbook(self):
-		dnd30 = "edition = 'Oriental Adventures' or edition = 'Supplementals (3.0)' or edition = 'Forgotten Realms (3.0)'"
-		dnd35 = "edition = 'Forgotten Realms (3.5)' or edition = 'Supplementals (3.5)' or edition = 'Core (3.5)' or edition = 'Eberron (3.5)'"
-		self.cur.execute("select distinct book, edition from spells join levels on spells.id = levels.spell where class='" + self.d20class + "' and ("+ (dnd35 if self.edition == "1" else dnd30) + ") order by edition, book" )
+		self.cur.execute("select distinct book, edition from spells join levels on spells.id = levels.spell where class='" + self.d20class + "' and ruleset ='" + self.ruleset + "' order by edition, book" )
 		booksrows = self.cur.fetchall()
 		bookslist = list(map(lambda t: t[0], booksrows))
 		books = zip(map(str, range(len(booksrows)+1)[1:]), map(lambda row : row[0] + " (" + row[1] + ")" , booksrows))
 
-		brc, bch = self.d.menu("Which Book?",
+		brc, bch = self.d.menu("Select Book",
 				books, height=40, width=90, menu_height=33,
 				common="--extra-button --extra-label \"Save\"")
 		if bch:
@@ -107,4 +108,4 @@ parser.add_argument("--file", "-f", default="selection", metavar="FILE")
 args = parser.parse_args()
 
 menu = Menu(args.file)
-menu.askedition()
+menu.askruleset()
