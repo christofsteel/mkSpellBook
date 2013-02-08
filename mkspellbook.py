@@ -52,6 +52,7 @@ def texify(string):
 parser = argparse.ArgumentParser(description="Creates a Spellbook")
 parser.add_argument("--template", "-t", default="plain")
 parser.add_argument("--output", "-o", type=argparse.FileType('w'), metavar="FILE")
+parser.add_argument("--input", "-i", type=argparse.FileType('r'), default="selection", metavar="FILE")
 args = parser.parse_args()
 templatepath = "templates/" + args.template + "/"
 
@@ -63,7 +64,12 @@ con.row_factory = sqlite3.Row
 spellcur = con.cursor()
 descriptorcur = con.cursor()
 
-spellcur.execute("select * from spells join levels on spells.id = levels.spell where class = 'Cleric' and edition = 'Core (3.5)' order by level,name;")
+spellsfile = args.input.read().split()
+spells="id = \"None\""
+for i in range(int(len(spellsfile)/2)):
+	spells += " or (id = "+spellsfile[2*i] + " and class = '" + spellsfile[2*i+1] + "')"
+
+spellcur.execute("select * from spells join levels on spells.id = levels.spell where " + spells + " order by level,name;")
 
 head = open(templatepath + 'head.tex', 'r')
 write(args.output, head.read())
