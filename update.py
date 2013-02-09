@@ -48,7 +48,7 @@ for page in pages:
             s['subschool'] = mSubschool.group("subschool")
 
         s['descriptor'] = []
-        for mDescriptor in re.finditer("<a href=\"/spells/descriptors/.*\">(?P<descriptor>.*)</a>", spelldetail('#content').html()):
+        for mDescriptor in re.finditer("<a href=\"/spells/descriptors/[^\"]*\">(?P<descriptor>[^<]*)</a>", spelldetail('#content').html()):
             s['descriptor'].append(mDescriptor.group("descriptor"))
 
         s['levels'] = dict()                

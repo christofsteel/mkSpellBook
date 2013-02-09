@@ -85,7 +85,7 @@ while row is not None:
     drow = descriptorcur.fetchone()
     dictrow['descriptor'] = ""
     while drow is not None:
-        dictrow['descriptor'] += drow['descriptor']
+        dictrow['descriptor'] += "[" + drow['descriptor'] + "] "
         drow = descriptorcur.fetchone()
     cond = condition(dictrow, templatestring)
     replaced = replace(dictrow, cond)
