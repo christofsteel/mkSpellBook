@@ -24,7 +24,7 @@ To select your spells, run
 
 To generate your Spellbook, run
 
-    python mkspellbook.py -o yourspellbook.py
+    ./mkspellbook.py -o yourspellbook.py
     
 ### Print as booklet ###
 If you want to generate a booklet, this might help:
@@ -40,8 +40,14 @@ If you want to generate a booklet, this might help:
     
 
 ## Template ##
-mkSpellBook supports templates. Just create a new folder in `templates/`. See `templates/plain/' for an example.  
+mkSpellBook supports templates. Just create a new folder in `templates/`. See `templates/plain/` for an example.  
 Run `./mkspellbook.py -t [template]` to use a template.
+
+### Current Templates ###
+| Plain | Fancy |
+|:-----:|:-----:|
+| ![Plain](templates/plain/example.png "Plain") | ![Fancy](templates/fancy/example.png "Fancy") |
+
 
 ## Schema ##
 
