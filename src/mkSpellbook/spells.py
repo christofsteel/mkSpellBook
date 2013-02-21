@@ -24,6 +24,21 @@ class Spells:
 		 else:
 			 return ""
 
+	def getSpellsByTuple(self, tspells=[]):
+		spells=[]
+		self.cur.execute("SELECT DISTINCT * from spells JOIN levels on levels.spell = spells.id WHERE " + " OR ".join(["id = " + str(spell[0]) + " AND class = '" + spell[1] + "'" for spell in tspells]) + " ORDER BY level, name")
+		spellsrows = self.cur.fetchall()
+		for spell in spellsrows:
+			dictspell = dict(spell)
+			self.cur.execute("SELECT DISTINCT * FROM descriptors WHERE spell = '" + str(spell['id']) + "'")
+			descrow = self.cur.fetchall()
+			dictspell['descriptor'] = []
+			for descriptor in descrow:
+				dictspell['descriptor'].append(descriptor)
+			spells.append(dictspell)
+		return spells
+
+
 	def getRulesets(self):
 		self.cur.execute("SELECT DISTINCT ruleset FROM spells")
 		return list(map(lambda row: row[0], self.cur.fetchall()))

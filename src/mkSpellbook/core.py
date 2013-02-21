@@ -2,10 +2,11 @@
 
 import shlex
 import shutil
-import argparse
 import os
-from mkSpellbook.Dialog3 import Dialog
-from mkSpellbook.Spellbook import Spells
+from mkSpellbook import __path__
+from mkSpellbook.dialog import Dialog
+from mkSpellbook.spells import Spells
+from mkSpellbook.genlatex import Genlatex
 
 class MkSpellbook:
 	def __init__(self, args):
@@ -16,16 +17,20 @@ class MkSpellbook:
 		self.d.menu_height = 33
 		self.spellbookfolder = os.path.expanduser("~/.mkspellbook/spellbooks")
 		self.spellbook = args.spellbook
+		self.template = "plain"
 		self.load()
 
-	def validSpellbookName(self, spellbook):
-		return not "/" in spellbook
+	def validFolderName(self, folder):
+		return not "/" in folder
 
 	def loadMenu(self):	
 		availspellbooks = []
 		for spellbook in os.listdir(self.spellbookfolder):
 			if os.path.isdir(self.spellbookfolder + "/" + spellbook):
 				availspellbooks.append(spellbook)
+		if availspellbooks == []:
+			self.d.msgbox("No spellbooks saved")
+			return self.start
 		lrc, lch = self.d.menu("Spellbooks", self.mkSelection(availspellbooks))
 		if lch:
 			return lambda: self.askYesNoLoad(availspellbooks[int(lch)-1])
@@ -50,7 +55,7 @@ class MkSpellbook:
 	def saveMenu(self):
 		src, filename = self.d.inputbox("Name your Spellbook", init=self.spellbook)
 		if not src:
-			if validSpellbookName(spellbook):
+			if self.validFolderName(filename):
 				if os.path.isdir(self.spellbookfolder + "/" + filename):
 					yrc, ych = self.d.yesno("A Spellbook called "+ filename + " already exists. Override it?")
 					if not yrc:
@@ -83,12 +88,20 @@ class MkSpellbook:
 
 
 	def templateMenu(self):
-#		templates = [template for template in os.listdir(self.	
-#TODO Path for templates
-		pass
+		templates = []
+		for template in os.listdir(__path__[0] + "/templates"):
+			if os.path.isdir(__path__[0] + "/templates/" + template):
+				templates.append(template)
+		trc, tch = self.d.menu("Templates", self.mkSelection(templates))
+		if tch:
+			self.template = templates[int(tch)-1]
+		return self.start
 
 	def pdflatex(self):
-		pass
+		g = Genlatex()
+		g.genlatex(self.spellbookfolder, self.spellbook, self.spells, self.selectedspells, (__path__[0] + "/templates/" + self.template + "/"))
+		return self.start
+
 	
 	def viewSpellbook(self):
 		pass
@@ -198,12 +211,3 @@ class MkSpellbook:
 			f.write(str(spell[0]) + " " + spell[1] + "\n")
 		f.close()
 		return self.start
-		
-
-parser = argparse.ArgumentParser()
-parser.add_argument("--spellbook", "-s", default="Spellbook")
-parser.add_argument("--database", "-d", default="~/.mkspellbook/spells.db")
-args = parser.parse_args()
-
-mkspellbook = MkSpellbook(args)
-mkspellbook.caller(mkspellbook.start)
