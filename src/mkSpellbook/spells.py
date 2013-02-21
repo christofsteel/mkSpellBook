@@ -34,7 +34,7 @@ class Spells:
 			descrow = self.cur.fetchall()
 			dictspell['descriptor'] = []
 			for descriptor in descrow:
-				dictspell['descriptor'].append(descriptor)
+				dictspell['descriptor'].append(descriptor['descriptor'])
 			spells.append(dictspell)
 		return spells
 

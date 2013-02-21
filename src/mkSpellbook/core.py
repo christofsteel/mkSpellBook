@@ -17,6 +17,8 @@ class MkSpellbook:
 		self.d.menu_height = 33
 		self.spellbookfolder = os.path.expanduser("~/.mkspellbook/spellbooks")
 		self.spellbook = args.spellbook
+		self.author = "Sir Castalot"
+		self.logo = ""
 		self.template = "plain"
 		self.load()
 
@@ -99,7 +101,7 @@ class MkSpellbook:
 
 	def pdflatex(self):
 		g = Genlatex()
-		g.genlatex(self.spellbookfolder, self.spellbook, self.spells, self.selectedspells, (__path__[0] + "/templates/" + self.template + "/"))
+		g.genlatex(self.spellbookfolder, self.spellbook, self.spells, self.selectedspells, (__path__[0] + "/templates/" + self.template + "/"), self.author, self.logo)
 		return self.start
 
 	
@@ -117,14 +119,20 @@ class MkSpellbook:
 				raise
 
 		try:
-			f = open(self.spellbookfolder + "/" + self.spellbook + "/spellselection", "r")
+			f = open(self.spellbookfolder + "/" + self.spellbook + "/spellselection", "r")			
 			selectedspellsraw = f.read()
 			f.close()
+
 		except IOError:
 			selectedspellsraw = ""
 		self.selectedspells = set()
-		for i in range(int(len(selectedspellsraw.split())/2)):
-			self.selectedspells.add((int(selectedspellsraw.split()[2*i]), selectedspellsraw.split()[2*i+1]))
+		lines = selectedspellsraw.split('\n')
+		self.author = lines[0]
+		self.logo = lines[1]
+
+		for line in lines[2:]:
+			if line:
+				self.selectedspells.add((int(line.split(' ')[0]), line.split(' ')[1]))
 
 
 	def mkSelection(self, selection):
@@ -138,6 +146,8 @@ class MkSpellbook:
 		menuselection = [	("Select Spellbook", self.loadMenu), 
 					("Select Spells", self.askruleset), 
 					("Clear Spells", self.clearSpells), 
+					("Set an author", self.askAuthor), 
+					("Set a logo", self.askLogo), 
 					("Save Spellbook", self.saveMenu),  
 					("Delete a Spellbook", self.deleteMenu),  
 					("Select Template", self.templateMenu), 
@@ -198,6 +208,19 @@ class MkSpellbook:
 			self.selectedspells = self.selectedspells.union(shownSpellsOnIds)
 		return self.handleret(src, self.askbook, self.asklevel)
 
+	def askAuthor(self):
+		arc, author = self.d.inputbox("Set an author:", init=self.author)
+		if author:
+			self.author = author
+			return self.start
+		return self.start
+
+	def askLogo(self):
+		lrc, logo = self.d.fselect("Select a logo for the Spellbook",  os.path.expanduser("~"))
+		if logo:
+			self.logo = logo
+			return self.start
+		return self.start
 
 	def save(self):
 		try:
@@ -205,9 +228,11 @@ class MkSpellbook:
 		except OSError:
 			if not os.path.isdir(self.spellbookfolder):
 				raise
-
-		f = open(self.spellbookfolder + "/" + self.spellbook + "/spellselection", "w")
+		f = open(self.spellbookfolder + "/" + self.spellbook + "/spellselection", "w")		
+		f.write(self.author + '\n')
+		f.write(self.logo + '\n')
 		for spell in self.selectedspells:
 			f.write(str(spell[0]) + " " + spell[1] + "\n")
 		f.close()
+
 		return self.start

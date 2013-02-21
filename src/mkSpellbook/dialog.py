@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import subprocess
 import shlex
+import os
 
 class Dialog:
 	def __init__(self):
@@ -23,6 +24,18 @@ class Dialog:
 		self.common         = common
 		self.debug          = debug
 	
+	def fselect(self, text, startpath, height=25, width=80, debug=None):
+		startpath = os.path.abspath(startpath) + "/"
+		command = "dialog --title \"" + text + "\" --fselect \"" + startpath + "\" " + str(height) + " " + str(width)
+		drc, file = self.mkDialog(shlex.split(command))
+		if file:
+			if os.path.isdir(file):
+				return self.fselect(text, file, height, width, debug)
+			else:
+				return (drc, file)
+		else:
+			return (drc, None)
+
 	def msgbox(self, text, height=10, width=50, common=None, debug=None):
 		command = "dialog " + (common or self.common) + " --msgbox \"" + text + "\" " + str(height) + " " + str(width)
 		if (debug != None and debug) or self.debug:

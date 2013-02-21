@@ -18,8 +18,10 @@ class Genlatex:
 	def replace(self, dictionary, string):
 		return self.replacevarregexp.sub(lambda p : self.texify(str(dictionary[p.group("var")])), string)
 
-	def condition(self, dictionary, string):
-		return self.conditionregexp.sub(lambda m : self.replace(dictionary, m.group("string")) if m.group("condition") in dictionary and dictionary[m.group("condition")] else "", string)
+	def insertTemplate(self, dictionary, string):
+		decondition =  self.conditionregexp.sub(lambda m : self.replace(dictionary, m.group("string")) if m.group("condition") in dictionary and dictionary[m.group("condition")] else "", string)
+		replaced = self.replace(dictionary, decondition)
+		return replaced
 
 	def texify(self, string):
 		replacements = {
@@ -47,7 +49,7 @@ class Genlatex:
 			string = re.sub(k, v, string, flags=re.UNICODE)
 		return string
 	
-	def genlatex(self, spellbookpath, spellbookname, spells, selectedspells, templatepath):
+	def genlatex(self, spellbookpath, spellbookname, spells, selectedspells, templatepath, author, logo):
 		spellbookbasename = spellbookpath + "/" + spellbookname + "/" + spellbookname
 		spellbookfilename = spellbookpath + "/" + spellbookname + "/" + spellbookname + ".tex"
 		spellbookpdfname = spellbookpath + "/" + spellbookname + "/" + spellbookname + ".pdf"
@@ -56,16 +58,14 @@ class Genlatex:
 		templatestring = template.read()
 		template.close()
 		head = open(templatepath + 'head.tex', 'r')
-		spellbookfile.write(head.read())
+		spellbookfile.write(self.insertTemplate({'author': author, 'logo': logo, 'title': spellbookname}, head.read()))
 		head.close()
 		currlevel = -1
 		for spell in spells.getSpellsByTuple(selectedspells):
 			if currlevel != spell['level']:
 				currlevel = spell['level']
 				spellbookfile.write("\\chapter{Level " + str(currlevel) + "}")
-			cond = self.condition(spell, templatestring)
-			replaced = self.replace(spell, cond)
-			spellbookfile.write(replaced)
+			spellbookfile.write(self.insertTemplate(spell, templatestring))
 		tail = open(templatepath + 'tail.tex', 'r')
 		spellbookfile.write(tail.read())
 		tail.close()
@@ -78,5 +78,4 @@ class Genlatex:
 		os.remove(spellbookbasename + ".aux")
 		os.remove(spellbookbasename + ".toc")
 		os.remove(spellbookbasename + ".log")
-		os.remove(spellbookbasename + ".tex")
 
