@@ -3,6 +3,7 @@
 import shlex
 import shutil
 import os
+import subprocess
 from mkSpellbook import __path__
 from mkSpellbook.dialog import Dialog
 from mkSpellbook.spells import Spells
@@ -17,6 +18,7 @@ class MkSpellbook:
 		self.d.menu_height = 33
 		self.spellbookfolder = os.path.expanduser("~/.mkspellbook/spellbooks")
 		self.spellbook = args.spellbook
+		self.selectedspells = set()
 		self.author = "Sir Castalot"
 		self.logo = ""
 		self.template = "plain"
@@ -76,11 +78,11 @@ class MkSpellbook:
 
 	def deleteMenu(self):
 		availspellbooks = [spellbook for spellbook in os.listdir(self.spellbookfolder) if os.path.isdir(self.spellbookfolder + "/" + spellbook)]
-		lrc, lch = self.d.menu("Deleta a Spellbook", self.mkSelection(availspellbooks))
-		if lch:
-			return lambda: self.askYesNoDelete(availspellbooks[int(lch)-1])
-		else:
-			return self.start
+		if availspellbooks:
+			lrc, lch = self.d.menu("Deleta a Spellbook", self.mkSelection(availspellbooks))
+			if lch:
+				return lambda: self.askYesNoDelete(availspellbooks[int(lch)-1])
+		return self.start
 
 	def askYesNoDelete(self, spellbook):
 		yrc, ych = self.d.yesno("Do you really want to delete " + spellbook + "? It cannot be recovered.")
@@ -94,9 +96,10 @@ class MkSpellbook:
 		for template in os.listdir(__path__[0] + "/templates"):
 			if os.path.isdir(__path__[0] + "/templates/" + template):
 				templates.append(template)
-		trc, tch = self.d.menu("Templates", self.mkSelection(templates))
-		if tch:
-			self.template = templates[int(tch)-1]
+		if templates:
+			trc, tch = self.d.menu("Templates", self.mkSelection(templates))
+			if tch:
+				self.template = templates[int(tch)-1]
 		return self.start
 
 	def pdflatex(self):
@@ -106,7 +109,11 @@ class MkSpellbook:
 
 	
 	def viewSpellbook(self):
-		pass
+		vch, viewer = self.d.inputbox("Which viewer do you want to use?", init="evince")
+		if viewer:
+			subprocess.Popen([viewer, self.spellbookfolder + "/" + self.spellbook + "/" + self.spellbook + ".pdf"])
+		return self.start
+			
 	
 	def addMenu(self):
 		pass
@@ -125,6 +132,8 @@ class MkSpellbook:
 
 		except IOError:
 			selectedspellsraw = ""
+			return
+
 		self.selectedspells = set()
 		lines = selectedspellsraw.split('\n')
 		self.author = lines[0]
@@ -167,10 +176,12 @@ class MkSpellbook:
 
 	def askruleset(self):
 		rulesets = self.spells.getRulesets()
-		rrc, rch  = self.d.menu("Select Ruleset", self.mkSelection(rulesets))
-		if rch:
-			self.ruleset = rulesets[int(rch)-1]
-		return self.handleret(rrc, self.askclass, self.start)
+		if rulesets:
+			rrc, rch  = self.d.menu("Select Ruleset", self.mkSelection(rulesets))
+			if rch:
+				self.ruleset = rulesets[int(rch)-1]
+				return self.askclass
+		return self.start
 
 	def askclass(self):
 		classes = self.spells.getClasses(self.ruleset)

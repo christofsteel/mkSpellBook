@@ -3,9 +3,37 @@ import sqlite3
 
 class Spells:
 	def __init__(self, dbname):
-		con = sqlite3.connect(dbname)
-		con.row_factory = sqlite3.Row
-		self.cur = con.cursor()
+		self.con = sqlite3.connect(dbname)
+		self.con.row_factory = sqlite3.Row
+		self.cur = self.con.cursor()
+		tests = [("SELECT name FROM sqlite_master WHERE type='table' AND name='spells';", self.createtable_spells),
+			("SELECT name FROM sqlite_master WHERE type='table' AND name='descriptors';", self.createtable_descriptors),
+			("SELECT name FROM sqlite_master WHERE type='table' AND name='levels';", self.createtable_levels),
+			("SELECT name FROM sqlite_master WHERE type='table' AND name='spellbooks';", self.createtable_spellbooks),
+			("SELECT name FROM sqlite_master WHERE type='table' AND name='spellsinspellbooks';", self.createtable_spellsinspellbooks)]
+		for query, f in tests:
+			self.cur.execute(query)
+			testrows = self.cur.fetchall()
+			if not testrows:
+				f()
+		self.con.commit()
+
+	def createtable_spells(self):
+		self.cur.execute("CREATE TABLE spells " + 
+					"(id integer primary key, ruleset text, link text, name text, book text, edition text, school text, subschool text, verbal integer, somatic integer, material integer, arcanefocus integer, divinefocus integer, xpcost integer, " +
+					"castingtime text, range text, area text, target text, duration text, savingthrow text, spellres text, spelltext text);");		
+
+	def createtable_levels(self):
+		self.cur.execute("CREATE TABLE levels (spell integer, class text, level integer, FOREIGN KEY(spell) REFERENCES spells(id));")
+
+	def createtable_descriptors(self):
+		self.cur.execute("CREATE TABLE descriptors (spell integer, descriptor text,FOREIGN KEY(spell) REFERENCES spells(id));")
+
+	def createtable_spellbooks(self):
+		self.cur.execute("CREATE TABLE spellbooks (id integer primary key, name text, author text, logo text);")
+
+	def createtable_spellsinspellbooks(self):
+		self.cur.execute("CREATE TABLE spellsinspellbooks (spell integer, spellbook integer, FOREIGN KEY(spell) REFERENCES spells(id), FOREIGN KEY(spellbook) REFERENCES spellbooks(id));")
 
 	def makefilter(self, ruleset=None, d20class=None, book=None, level=None, id=None):
 		 spellfilter = []
