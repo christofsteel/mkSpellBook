@@ -1,215 +1,56 @@
-#!/usr/bin/env python3
-import sqlite3
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy import create_engine
+from mkSpellbook.models import *
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm.exc import NoResultFound
+
 
 class Spells:
-	def __init__(self, dbname):
-		self.con = sqlite3.connect(dbname)
-		self.con.row_factory = sqlite3.Row
-		self.cur = self.con.cursor()
-		tests = [("SELECT name FROM sqlite_master WHERE type='table' AND name='spells';", self.createtable_spells),
-			("SELECT name FROM sqlite_master WHERE type='table' AND name='descriptors';", self.createtable_descriptors),
-			("SELECT name FROM sqlite_master WHERE type='table' AND name='levels';", self.createtable_levels),
-			("SELECT name FROM sqlite_master WHERE type='table' AND name='spellbooks';", self.createtable_spellbooks),
-			("SELECT name FROM sqlite_master WHERE type='table' AND name='spellsinspellbooks';", self.createtable_spellsinspellbooks)]
-		for query, f in tests:
-			self.cur.execute(query)
-			testrows = self.cur.fetchall()
-			if not testrows:
-				f()
-		self.con.commit()
+	def __init__(self, database):
+		engine = create_engine(database)
+		Session = sessionmaker(bind=engine)
+		self.session = Session()		
+		Base.metadata.create_all(engine)
 
-	def createtable_spells(self):
-		self.cur.execute("CREATE TABLE spells " + 
-					"(id integer primary key, ruleset text, link text, name text, book text, edition text, school text, subschool text, verbal integer, somatic integer, material integer, arcanefocus integer, divinefocus integer, xpcost integer, " +
-					"castingtime text, range text, area text, target text, duration text, savingthrow text, spellres text, spelltext text);");		
+	def listRulesets(self):
+		return [spell.ruleset for spell in self.session.query(Spell.ruleset).distinct()]
 
-	def createtable_levels(self):
-		self.cur.execute("CREATE TABLE levels (spell integer, class text, level integer, FOREIGN KEY(spell) REFERENCES spells(id));")
+	def listClasses(self, ruleset):
+		query = self.session.query(ClassLevel.d20class)
+		query = query.filter(ClassLevel.spells.any(Spell.ruleset == ruleset))
+		return [cl.d20class for cl in query.distinct()]
 
-	def createtable_descriptors(self):
-		self.cur.execute("CREATE TABLE descriptors (spell integer, descriptor text,FOREIGN KEY(spell) REFERENCES spells(id));")
+	def listBooks(self, ruleset, d20class):
+		query = self.ession.query(Spell.book, Spell.edition)
+		query = query.filter(Spell.ruleset == ruleset)
+		query = query.filter(Spell.classlevels.any(ClassLevel.d20class == d20class))
+		return query.distinct().all()
 
-	def createtable_spellbooks(self):
-		self.cur.execute("CREATE TABLE spellbooks (id integer primary key, name text, author text, logo text);")
+	def listLevels(self, ruleset, d20class, book):
+		query = self.session.query(ClassLevel.level)
+		query = query.filter(ClassLevel.spells.any(Spell.ruleset == ruleset, Spell.book == book))
+		query = query.filter(ClassLevel.d20class == d20class)
+		return [cl.level for cl in query.distinct()]
 
-	def createtable_spellsinspellbooks(self):
-		self.cur.execute("CREATE TABLE spellsinspellbooks (spell integer, spellbook integer, FOREIGN KEY(spell) REFERENCES spells(id), FOREIGN KEY(spellbook) REFERENCES spellbooks(id));")
+	def listSpells(self, ruleset, d20class, book, level):
+		query = self.session.query(Spells)
+		query = query.filter(Spell.ruleset == ruleset, Spell.book == book)
+		query = query.filter(Spell.classlevels.any(ClassLevel.d20class == d20class, ClassLevel.level == level))
+		return query.all()
+	
+	def mkDescriptors(self, descriptors):
+		return [self.session.query(Descriptor).filter(Descriptor.descriptor == descriptor).first() or Descriptor(descriptor) for descriptor in descriptors]
 
-	def makefilter(self, ruleset=None, d20class=None, book=None, level=None, id=None):
-		 spellfilter = []
-		 if ruleset:
-			 spellfilter.append("ruleset = '" + ruleset + "'")
-		 if d20class:
-			 spellfilter.append("class = '" + d20class + "'")
-		 if book:
-			 spellfilter.append("book = \"" + book + "\"")
-		 if level != None:
-			 spellfilter.append("level = '" + str(level) + "'")
-		 if id != None:
-			 spellfilter.append("id = '" + str(id) + "'")
-		 if spellfilter:
-			 return " WHERE " + " AND ".join(spellfilter)
-		 else:
-			 return ""
-
-	def getSpellsByTuple(self, tspells=[]):
-		spells=[]
-		self.cur.execute("SELECT DISTINCT * from spells JOIN levels on levels.spell = spells.id WHERE " + " OR ".join(["id = " + str(spell[0]) + " AND class = '" + spell[1] + "'" for spell in tspells]) + " ORDER BY level, name")
-		spellsrows = self.cur.fetchall()
-		for spell in spellsrows:
-			dictspell = dict(spell)
-			self.cur.execute("SELECT DISTINCT * FROM descriptors WHERE spell = '" + str(spell['id']) + "'")
-			descrow = self.cur.fetchall()
-			dictspell['descriptor'] = []
-			for descriptor in descrow:
-				dictspell['descriptor'].append(descriptor['descriptor'])
-			spells.append(dictspell)
-		return spells
-
-
-	def getRulesets(self):
-		self.cur.execute("SELECT DISTINCT ruleset FROM spells")
-		return list(map(lambda row: row[0], self.cur.fetchall()))
-
-	def getClasses(self, ruleset=None):
-		self.cur.execute("SELECT DISTINCT class FROM spells JOIN levels ON spells.id = levels.spell" + self.makefilter(ruleset))
-		return [row[0] for row in self.cur.fetchall()]
-#        list(map(lambda row: row[0], self.cur.fetchall()))
-
-	def getBooks(self, ruleset=None, d20class=None):
-		self.cur.execute("SELECT DISTINCT book, edition FROM spells JOIN levels ON spells.id = levels.spell" + self.makefilter(ruleset, d20class) + " ORDER BY edition, book")
-		return [(row[0], row[1]) for row in self.cur.fetchall()]
-#        list(map(lambda row: tuple(row[0], row[1]), self.cur.fetchall()))
-
-
-	def getLevels(self, ruleset=None, d20class=None, book=None):
-		self.cur.execute("SELECT DISTINCT level FROM spells JOIN levels ON spells.id = levels.spell" + self.makefilter(ruleset, d20class, book) + " ORDER BY level")
-		return [row[0] for row in self.cur.fetchall()]
-#        list(map(lambda row: row[0], self.cur.fetchall()))
-
-	def getSpells(self, ruleset=None, d20class=None, book=None, level=None, id=None):
-		spells = []    
-		self.cur.execute("SELECT DISTINCT * FROM spells JOIN levels ON spells.id = levels.spell" + self.makefilter(ruleset, d20class, book, level, id) + " ORDER BY level, name")
-		spellrows = self.cur.fetchall()
-		for spell in spellrows:
-			dictspell = dict(spell)
-			self.cur.execute("SELECT DISTINCT * FROM descriptors WHERE spell = '" + str(spell['id']) + "'")
-			descrow = self.cur.fetchall()
-			dictspell['descriptor'] = []
-			for descriptor in descrow:
-				dictspell['descriptor'].append(descriptor)
-			spells.append(dictspell)
-		return spells
+	def mkClassLevel(self, classlevel):
+		return self.session.query(ClassLevel).filter(ClassLevel.d20class == classlevel.d20class, ClassLevel.level == classlevel.level).first() or ClassLevel(classlevel.d20class, classlevel.level)
 
 	def addSpell(self, spell):
-		self.cur.execute("select count(id) from spells")
-		spell['id'] = int(cur.fetchall()[0][0])+1
-		for k in ["id", "ruleset",  "book", "edition","school", "subschool", "verbal", "somatic", "material", "arcanefocus", "divinefocus", "xpcost"    , "castingtime", "target", "duration", "savingthrow", "spellres", "spelltext"]:
-			if spell[k]:
-				keys = keys + "," + k
-				values = values + "," + "\""+ str(spell[k]) + "\""		
-				query = "INSERT INTO spells (" + keys + ") VALUES ("+values+");"
-				self.cur.execute(query)
-
-		for k, v in spell['levels'].items():
-			levelquery = "INSERT INTO levels (spell, class, level) VALUES (\"" + str(spell['id']) + "\", \"" + k + "\", \"" + str(v) +"\");"
-			cur.execute(levelquery)
-
-		if 'descriptors' in spell:
-			for descriptor in spell['descriptors']:
-				descquery = "INSERT INTO descriptors (spell, descriptor) VALUES (\"" + str(spell['id']) + "\", \"" + descriptor + "\");"
-				cur.execute(descquery)
-		con.commit()
-
-
-	'''class Spell:
-		def __init__(self, sqlrow=None, ruleset=None, link=None, source=None, name=None, book=None, edition=None, school=None, subschool=None, verbal=None, somatic=None, material=None, arcanefocus=None, divinefocus=None, xpcost=None, castingtime=None, spellrange=None, area=None, target=None, duration=None, savingthrow=None, spellres=None, spelltext=None):
-			self.spellprop = dict()
-			if sqlrow:
-				self.spellprop = dict(sqlrow)
-				self.spellprop['ruleset'] = ruleset
-				self.spellprop['link'] = link
-				self.spellprop['source'] = source
-				self.spellprop['book'] = book
-				self.spellprop['edition'] = edition
-				self.spellprop['school'] = school
-				self.spellprop['subschool'] = subschool
-				self.spellprop['verbal'] = verbal
-				self.spellprop['material'] = material
-				self.spellprop['arcanefocus'] = arcanefocus
-				self.spellprop['divinefocus'] = divinefocus
-				self.spellprop['xpcost'] = xpcost
-				self.spellprop['castingtime'] = castingtime
-				self.spellprop['area'] = area
-				self.spellprop['target'] = target
-				self.spellprop['duration'] = duration
-				self.spellprop['savingthrow'] = savingthrow
-				self.spellprop['spellres'] = spellres
-				self.spellprop['spelltext'] = spelltext
+		spell.descriptors = self.mkDescriptors([descriptor.descriptor for descriptor in spell.descriptors])
+		spell.classlevels = [self.mkClassLevel(cl) for cl in spell.classlevels]
+		self.session.add(spell)
+#		self.session.flush()
+#		self.session.commit()
 
 
 
-				def toDict(self):
-					s = dict()
-					if self.ruleset:
-					s['ruleset'] = self.ruleset
-					if self.link:
-					s['link'] = self.link
-					if self.source:
-					s['source'] = self.source
-					if self.book:
-					s['book'] = self.book
-					if self.edition:
-					s['edition'] = self.edition
-					if self.school:
-					s['school'] = self.school
-					if self.subschool:
-					s['subschool'] = self.subschool
-					if self.verbal:
-					s['verbal'] = self.verbal
-					if self.material:
-					s['material'] = self.material
-					if selg.arcanefocus:
-					s['arcanefocus'] = self.arcanefocus
-					if self.divinefocus:
-					s['divinefocus'] = self.divinefocus
-					if self.xpcost:
-					s['xpcost'] = self.xpcost
-					if self.castingtime:
-					s['castingtime'] = self.castingtime
-					if self.area:
-					s['area'] = self.area
-					if self.target:
-					s['target'] = self.target
-					if self.duration:
-					s['duration'] = self.duration
-					if self.savingthrow:
-					s['savingthrow'] = self.savingthrow
-					if self.spellres:
-					s['spellres'] = self.spellres
-					if self.spelltext:
-					s['spelltext'] = self.spelltext
-					return s
 
-					def fromDict(s):
-						if 'ruleset' in s
-						self.ruleset = s['ruleset']
-						self.link = s['link']
-						self.source = s['source']
-						self.book = s['book']
-						self.edition = s['edition']
-						self.school = s['school']
-						self.subschool = s['subschool']
-						self.verbal = s['verbal']
-						self.material = s['material']
-						self.arcanefocus = s['arcanefocus']
-						self.divinefocus = s['divinefocus']
-						self.xpcost = s['xpcost']
-						self.castingtime = s['castingtime']
-						self.area = s['area']
-						self.target = s['target']
-						self.duration = s['duration']
-						self.savingthrow = s['savingthrow']
-						self.spellres = s['spellres']
-						self.spelltext = s['spelltext']
-						'''     

@@ -109,14 +109,17 @@ class MkSpellbook:
 
 	
 	def viewSpellbook(self):
-		vch, viewer = self.d.inputbox("Which viewer do you want to use?", init="evince")
+		vrc, viewer = self.d.inputbox("Which viewer do you want to use?", init="evince")
 		if viewer:
 			subprocess.Popen([viewer, self.spellbookfolder + "/" + self.spellbook + "/" + self.spellbook + ".pdf"])
 		return self.start
 			
 	
 	def addMenu(self):
-		pass
+		selection = [	("Run an import script", self.runimport),
+				("Add a spell manually", self.addmanual)]
+		arc, ach = self.d.menu("How do you want to add spells?", self.mkSelection(c[0] for c in selection))
+
 
 	def load(self):
 		try:
