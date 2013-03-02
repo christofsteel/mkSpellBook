@@ -4,7 +4,7 @@ import argparse
 from mkSpellbook.core import MkSpellbook
 if __name__ == "__main__":
 	parser = argparse.ArgumentParser()
-	parser.add_argument("--spellbook", "-s", default="Spellbook")
+	parser.add_argument("--spellbook", "-s", default="My Spellbook")
 	parser.add_argument("--database", "-d", default="~/.mkspellbook/spells.db")
 	args = parser.parse_args()
 
