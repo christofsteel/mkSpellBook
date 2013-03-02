@@ -1,13 +1,14 @@
 #!/usr/bin/env python3
 #templatetest
 
-import sqlite3
 import re
-import argparse
 import subprocess
-import hashlib
 import os
+import os.path
+import shutil
+import tempfile
 from mkSpellbook.spells import Spells
+from mkSpellbook.models import *
 
 class Genlatex:
 	def __init__(self):
@@ -49,33 +50,40 @@ class Genlatex:
 			string = re.sub(k, v, string, flags=re.UNICODE)
 		return string
 	
-	def genlatex(self, spellbookpath, spellbookname, spells, selectedspells, templatepath, author, logo):
-		spellbookbasename = spellbookpath + "/" + spellbookname + "/" + spellbookname
-		spellbookfilename = spellbookpath + "/" + spellbookname + "/" + spellbookname + ".tex"
-		spellbookpdfname = spellbookpath + "/" + spellbookname + "/" + spellbookname + ".pdf"
-		spellbookfile = open(spellbookfilename, 'w')
+	def genlatex(self, spellbook, templatepath, output):
+		temppath = tempfile.TemporaryDirectory(prefix="mkSpellbook-")
+		temptex = tempfile.NamedTemporaryFile(dir=temppath.name, delete=False, suffix=".tex", mode="w")
+		templogo = None
+		if spellbook.logo:
+			templogo = tempfile.NamedTemporaryFile(dir=temppath.name, delete=False, suffix=spellbook.logoext)
+			templogo.write(spellbook.logo)
+			templogo.close()
+
+
 		template = open(templatepath + 'spell.tex', 'r')
 		templatestring = template.read()
 		template.close()
 		head = open(templatepath + 'head.tex', 'r')
-		spellbookfile.write(self.insertTemplate({'author': author, 'logo': logo, 'title': spellbookname}, head.read()))
+		temptex.write(self.insertTemplate({'author': spellbook.author, 'logo': templogo.name if spellbook.logo else None, 'title': spellbook.name}, head.read()))
+#		temptex.write(self.insertTemplate({'author': spellbook.author, 'title': spellbook.name}, head.read()))
 		head.close()
 		currlevel = -1
-		for spell in spells.getSpellsByTuple(selectedspells):
-			if currlevel != spell['level']:
-				currlevel = spell['level']
-				spellbookfile.write("\\chapter{Level " + str(currlevel) + "}")
-			spellbookfile.write(self.insertTemplate(spell, templatestring))
+		for spell in spellbook.spells:
+			spelldict = spell.classlevel.__dict__
+			spelldict.update(spell.spell.__dict__)
+			if currlevel != spelldict['level']:
+				currlevel = spelldict['level']
+				temptex.write("\\chapter{Level " + str(currlevel) + "}")
+			temptex.write(self.insertTemplate(spelldict, templatestring))
 		tail = open(templatepath + 'tail.tex', 'r')
-		spellbookfile.write(tail.read())
+		temptex.write(tail.read())
 		tail.close()
-		spellbookfile.close()
+		temptex.close()
 
-		subprocess.call(["pdflatex", "-output-directory", spellbookpath + "/" + spellbookname, spellbookfilename])
-		subprocess.call(["pdflatex", "-output-directory", spellbookpath + "/" + spellbookname, spellbookfilename])
-		subprocess.call(["pdflatex", "-output-directory", spellbookpath + "/" + spellbookname, spellbookfilename])
-
-		os.remove(spellbookbasename + ".aux")
-		os.remove(spellbookbasename + ".toc")
-		os.remove(spellbookbasename + ".log")
+		subprocess.call(["pdflatex", "-output-directory", temppath.name, temptex.name])
+		subprocess.call(["pdflatex", "-output-directory", temppath.name, temptex.name])
+		subprocess.call(["pdflatex", "-output-directory", temppath.name, temptex.name])
+		
+		pdfname = os.path.splitext(temptex.name)[0] + ".pdf"
+		shutil.copy(pdfname, output)
 
