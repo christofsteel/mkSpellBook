@@ -53,7 +53,7 @@ class Dialog:
 	def menu(self, title, items=[], height=None, width=None, menu_height=None, common=None, debug=None):
 		command = "dialog " + (common or self.common) +" --menu \"" + (title or self.title) + "\" " + str(height or self.height) + " " + str(width or self.width) + " " + str(menu_height or self.menu_height)
 		for k, v in items:
-			command += " \"" + k + "\" \"" + v +"\""
+			command += " \"" + str(k) + "\" \"" + str(v) +"\""
 		if (debug != None and debug) or self.debug:
 			print(command)
 		else:
