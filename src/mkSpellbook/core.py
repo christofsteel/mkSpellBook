@@ -226,6 +226,7 @@ class MkSpellbook(Menu):
 		orc, output = self.d.inputbox("Export pdf to", init=os.path.expanduser("~/" + self.spellbook.name + ".pdf"))
 		if output and not orc:
 			g = Genlatex()
+			self.spellbook.spells = sorted(self.spellbook.spells, key=lambda spell: (spell.classlevel.level, spell.spell.name))
 			g.genlatex(self.spellbook, self.template[1], output)
 			yrc, ych = self.d.yesno("Do you want to open your Spellbook?")
 			if not yrc:
