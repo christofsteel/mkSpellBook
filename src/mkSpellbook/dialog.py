@@ -3,6 +3,42 @@ import subprocess
 import shlex
 import os
 
+class NotYetCreatedError(Exception):
+	pass
+
+class Gauge:
+	def __init__(self, text="", percentage=0, height=7, width=80, common="", debug=False):
+		self.text = text
+		self.height = height
+		self.width = width
+		self.common = common
+		self.debug = debug
+		self.percentage = percentage
+		self.gauge = None
+
+	def show(self):
+		command = shlex.split("dialog " + self.common + "--gauge \"" + self.text + "\" " + str(self.height) + " " + str(self.width))
+		if self.debug:
+			print(command)
+		self.gauge = subprocess.Popen(command, stdin=subprocess.PIPE) #, stdout=subprocess.STDOUT, stderr=subprocess.PIPE)
+	
+	def update(self, percentage, text=None):
+		if self.gauge == None:
+			raise NotYetCreatedError
+		if not text == None:
+			self.text = text
+		command = "\nXXX\n"+str(percentage)+"\n"+self.text+"\n"+"XXX\n" 
+		if self.debug:
+			print(command)
+		self.gauge.stdin.write(bytes(command, "UTF-8"))
+		self.gauge.stdin.flush()
+
+	def close(self):
+		if self.gauge == None:
+			raise NotYetCreatedError
+		self.gauge.stdin.close()
+		
+
 class Dialog:
 	def __init__(self):
 		self.height = 15
