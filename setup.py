@@ -12,4 +12,5 @@ setup(name="mkSpellbook",
 	packages=['mkSpellbook'],
 	package_dir={'' : 'src/'},
 	scripts=['src/mkspellbook'],
-	package_data={'mkSpellbook': files})
+	package_data={'mkSpellbook': files},
+	install_requires=['pyquery', 'sqlalchemy'])
