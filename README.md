@@ -1,68 +1,90 @@
 # mkSpellBook #
 
-Generates a D&amp;D 3rd Edition (3.0 and 3.5) spellbook based on the spells available on dndtools.eu
+Generate and organize Spellbooks for d20 based role playing games.
 
 ## Prerequirements ##
 
-You need python3, pyquery, sqlite3.  
-If you want to use the fancy template, you need [pfgornaments](http://altermundus.com/pages/tkz/ornament/index.html).
+You need python3, pyquery, sqlite3 and sqlalchemy. 
+If you want to use the fancy or fancybw template, you need [pfgornaments](http://altermundus.com/pages/tkz/ornament/index.html).
+
+## Install ##
+
+Install using easy_install, pip or simply run `python setup.py install` 
+If you are using Arch Linux, you can use the PKGBUILD
 
 ## Usage ##
-To build your spell database, run
 
-    ./update.py
-  
-This generates you a `spells.db` with all the spells available on dndtools.eu.
+To start the program start
 
-To add a spell manually, run
-   
-    ./addspell.py
+    mkspellbook
 
-To select your spells, run
+and add spells via the import scripts.
 
-    ./selector.py
+## Advanced ##
 
-To generate your Spellbook, run
+### Templates ###
 
-    ./mkspellbook.py -o yourspellbook.py
-    
+mkSpellbook is shipped with 3 templates: plain, fancy, fancybw 
+To create a template add a folder in `~/.mkspellbook/templates` with at least 3 files:
+
+  * head.tex
+  * spell.tex
+  * tail.tex
+
+#### Variables ####
+
+You can use a variable with `[[var]]`. If you want to check, if a variable exists and is not empty, use `[[?var|CODE?]]` `CODE` is inserted only, of `var` exists and is not empty.
+
+##### head.tex #####
+head.tex is inserted at the start of your spellbook
+Variables:
+
+  * title 
+  * author
+  * logo
+
+##### spell.tex #####
+spell.tex is repeated for every selected spells.
+Variables:
+
+  * name
+  * link
+  * ruleset
+  * edition
+  * book
+  * d20class
+  * level
+  * school
+  * subschool
+  * descriptors
+  * verbal
+  * somatic
+  * material
+  * arcanefocus
+  * divinefocus
+  * xpcost
+  * castingtime
+  * spellrange
+  * area
+  * target
+  * duration
+  * savingthrow
+  * spellres
+  * spelltext
+
+###### tail.tex ######
+tail.tex is inserted at the end of your spellbook.
+
+### Import Scripts ###
+
+To create your own importscripts, add a pythonfile `script_YOURSCRIPT.py` to `~/.mkspellbook/importscripts`. 
+It should have a function called `runimport(database)`.
+
 ### Print as booklet ###
 If you want to generate a booklet, this might help:
 
-    pdflatex yourspellbook.tex
-    pdflatex yourspellbook.tex
-    pdflatex yourspellbook.tex # 3 times for the correct table of contents
     pdf2ps yourspellbook.pdf 
     psbook yourspellbook.ps yourspellbook_book.ps
     psnup -s1 -2 yourspellbook_book.ps yourspellbook_booklet.ps
     ps2pdf yourspellbook_booklet.ps yourspellbook_booklet.pdf
     rm yourspellbook.ps yourspellbook_book.ps yourspellbook_booklet.ps
-    
-
-## Template ##
-mkSpellBook supports templates. Just create a new folder in `templates/`. See `templates/plain/` for an example.  
-Run `./mkspellbook.py -t [template]` to use a template.
-
-### Current Templates ###
-| Plain | Fancy |
-|:-----:|:-----:|
-| ![Plain](templates/plain/example.png "Plain") | ![Fancy](templates/fancy/example.png "Fancy") |
-
-
-## Schema ##
-
-The Database contains 3 tables:
-
-spells:
-
-    CREATE TABLE spells (id integer primary key, ruleset text, link text, name text, book text, edition text, school, subschool, verbal integer, somatic integer, material integer, arcanefocus integer, divinefocus integer, xpcost integer, castingtime text, spellrange text, area text, target text, duration text, savingthrow text, spellres text, spelltext text);
-
-levels:
-
-    CREATE TABLE levels (spell integer, class text, level integer, FOREIGN KEY(spell) REFERENCES spells(id));
-
-descriptors:
-
-    CREATE TABLE descriptors (spell integer, descriptor text,FOREIGN KEY(spell) REFERENCES spells(id));
-
-enjoy.
