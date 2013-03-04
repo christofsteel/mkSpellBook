@@ -85,6 +85,17 @@ class Dialog:
 			print(command)
 		else:
 			return(self.mkDialog(shlex.split(command)))
+	
+	def form(self, text, height=40, width=80, common=None, fields=None, debug=False):
+		labelwidth = max([len(item[0]) for item in fields]) + 8
+		command_fields = []
+		for i in range(1, len(fields) + 1):
+			command_fields.append("\"" + fields[i-1][0] + "\" " + str(i*2) + " 4 \"" + fields[i-1][1] + "\" " + str(i*2) + " " + str(labelwidth) + " " + str(fields[i-1][2]) + " 255")
+		command = "dialog "+ (common or self.common) + " --form \"" + text + "\" " + str(height) + " " + str(width) + " " + str(height) + " " + " ".join(command_fields)
+		if (debug != None and debug) or self.debug:
+			print(command)
+		else:
+			return(self.mkDialog(shlex.split(command)))
 
 	def menu(self, title, items=[], height=None, width=None, menu_height=None, common=None, debug=None):
 		command = "dialog " + (common or self.common) +" --menu \"" + (title or self.title) + "\" " + str(height or self.height) + " " + str(width or self.width) + " " + str(menu_height or self.menu_height)
