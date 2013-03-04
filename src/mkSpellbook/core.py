@@ -82,8 +82,8 @@ class MkSpellbook(Menu):
 	def __init__(self, args):
 		Menu.__init__(self)
 
-		self.database = args.database
-		self.spells = Spells(os.path.expanduser(args.database))
+		self.database = os.path.expanduser(args.database)
+		self.spells = Spells(self.database)
 
 		self.spellbook = self.spells.getSpellbook(args.spellbook)
 		self.spells.session.add(self.spellbook)
