@@ -210,10 +210,10 @@ class MkSpellbook(Menu):
 		templates = []
 		for template in os.listdir(__path__[0] + "/templates"):
 			if os.path.isdir(__path__[0] + "/templates/" + template):
-				templates.append((template, __path__[0] + "/templates/" + template))
+				templates.append((template, __path__[0] + "/templates/" + template + "/"))
 		if os.path.isdir(os.path.expanduser("~/.mkspellbook/templates/")):
 			for template in os.listdir(os.path.expanduser("~/.mkspellbook/templates/")):
-				templates.append((template + " (User)", os.path.expanduser("~/.mkspellbook/templates/" + template)))
+				templates.append((template + " (User)", os.path.expanduser("~/.mkspellbook/templates/" + template + "/")))
 		if templates:
 			trc, tch = self.d.menu("Templates", self.mkSelection([template[0] for template in templates]))
 			if tch:
