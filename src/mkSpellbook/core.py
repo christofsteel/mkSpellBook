@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 
 import os
+import sys
 import subprocess
+import importlib
 from mkSpellbook import __path__
 from mkSpellbook.dialog import Dialog
 from mkSpellbook.spells import Spells
@@ -233,24 +235,23 @@ class MkSpellbook(Menu):
 		return self.start
 
 	def addMenu(self):
-		selection = [	("Run an import script", self.runimport),
-				("Add a spell manually", self.addmanual)]
-		arc, ach = self.d.menu("How do you want to add spells?", self.mkSelection([c[0] for c in selection]))
-		if ach and not arc:
-			return selection[int(ach)-1][1]
-		return self.start
-
-	def runimport(self):
 		importscripts = []
 		for importscript in os.listdir(__path__[0] + "/importscripts"):
-			importscripts.append((importscript, __path__[0] + "/importscripts/" + importscript))
+			if importscript.startswith("script_") and importscript.endswith(".py"):
+				importscripts.append((importscript,"System"))
 		if os.path.isdir(os.path.expanduser("~/.mkspellbook/importscripts/")):
 			for importscript in os.listdir(os.path.expanduser("~/.mkspellbook/importscripts/")):
-				importscripts.append((importscript + " (User)", __path__[0] + "/importscripts/" + importscript))
-		irc, ich = self.d.menu("Select import script", self.mkSelection([script[0] for script in importscripts]))
+				if importscript.startswith("script_") and importscript.endswith(".py"):
+					importscripts.append((importscript, "User"))
+		irc, ich = self.d.menu("Select import script", self.mkSelection([script[0] + " (" + script[1] + ")"  for script in importscripts]))
 		if ich and not irc:
-			subprocess.call([importscripts[int(ich)-1][1], self.database], shell=True)
-
-
-	def addmanual(self):
-		pass
+			script = importscripts[int(ich)-1]
+			if script[1] == "System":
+				mscript = importlib.import_module(__package__ + ".importscripts." + os.path.splitext(script[0])[0])
+				mscript.runimport(self.database)
+			else:
+				sys.path.insert(0,os.path.expanduser("~/.mkspellbook/importscripts"))
+				mscript = __import__(os.path.splitext(script[0])[0])
+				sys.path.remove(os.path.expanduser("~/.mkspellbook/importscripts"))
+				mscript.runimport(self.database)
+		return self.start
