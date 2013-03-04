@@ -5,7 +5,7 @@
 pkgname=mkspellbook-git
 pkgver=20130304
 pkgrel=1
-pkgdesc="A CLI tool that let's you create and organize Spellbooks for D20 based systems"
+pkgdesc="A CLI tool that lets you create and organize Spellbooks for D20 based systems"
 arch=(any)
 url="https://github.com/christofsteel"
 license=('WTFPL')
