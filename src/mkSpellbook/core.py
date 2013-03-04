@@ -88,7 +88,7 @@ class MkSpellbook(Menu):
 		self.spellbook = self.spells.getSpellbook(args.spellbook)
 		self.spells.session.add(self.spellbook)
 
-		self.template = "plain"
+		self.template = __path__[0] + "templates/plain/"
 
 	def start(self):
 		menuselection = [	("New Spellbook", self.newMenu),  
