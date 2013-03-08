@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import subprocess
+import tempfile
 import shlex
 import os
 
@@ -78,6 +79,13 @@ class Dialog:
 			print(command)
 		else:
 			return(self.mkDialog(shlex.split(command)))
+	def editbox(self, height=50, width=80):
+		with tempfile.NamedTemporaryFile(mode='r+') as f:
+			command = "dialog --editbox " + f.name + " " + str(height) + " " + str(width)
+			erc, ech = self.mkDialog(shlex.split(command))
+		return ((erc, ech))
+
+		
 
 	def yesno(self, text, height=10, width=50, common=None, debug=None):
 		command = "dialog " + (common or self.common) + " --yesno \"" + text + "\" " + str(height) + " " + str(width)
