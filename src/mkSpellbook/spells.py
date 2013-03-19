@@ -1,4 +1,5 @@
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy.sql.expression import or_
 from mkSpellbook.models import *
 
 
@@ -12,20 +13,22 @@ class Spells:
 	def listRulesets(self):
 		return [spell.ruleset for spell in self.session.query(Spell.ruleset).distinct()]
 
-	def listClasses(self, ruleset):
-		query = self.session.query(ClassLevel.d20class).filter(ClassLevel.spells.any(Spell.ruleset == ruleset)).distinct().all()
+	def listClasses(self, rulesets):
+		clause = [Spell.ruleset == ruleset for ruleset in rulesets]
+		query = self.session.query(ClassLevel.d20class).filter(ClassLevel.spells.any(or_(*clause))).distinct().all()
 		return [cl.d20class for cl in query]
 
-	def listBooks(self, ruleset, d20class):
+	def listBooks(self, rulesets, d20classes):
 		query = self.session.query(Spell.book, Spell.edition)
-		query = query.filter(Spell.ruleset == ruleset)
-		query = query.filter(Spell.classlevels.any(ClassLevel.d20class == d20class))
+		query = query.filter(or_(*[Spell.ruleset == ruleset for ruleset in rulesets]))
+		query = query.filter(Spell.classlevels.any(or_(*[ClassLevel.d20class == d20class for d20class in d20classes])))
 		return query.distinct().order_by(Spell.edition, Spell.book).all()
 
-	def listLevels(self, ruleset, d20class, book):
+	def listLevels(self, rulesets, d20classes, books):
 		query = self.session.query(ClassLevel.level)
-		query = query.filter(ClassLevel.spells.any(Spell.ruleset == ruleset)).filter(ClassLevel.spells.any(Spell.book ==  book))
-		query = query.filter(ClassLevel.d20class == d20class)
+		query = query.filter(ClassLevel.spells.any(or_(*[Spell.ruleset == ruleset for ruleset in rulesets])))
+		query = query.filter(ClassLevel.spells.any(or_(*[Spell.book ==  book[0] for book in books])))
+		query = query.filter(or_(*[ClassLevel.d20class == d20class for d20class in d20classes]))
 		return [cl.level for cl in query.distinct()]
 
 	def listSpells(self, ruleset, d20class, book, level):
