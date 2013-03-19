@@ -45,7 +45,7 @@ class SpellBookTab():
 		self.tab.bookList.setModel(self.books)
 
 		self.levels = QtGui.QStandardItemModel(self.tab.levelList)
-		#self.books.itemChanged.connect(lambda param: self.updateLevelOptions(param))
+		self.books.itemChanged.connect(lambda param: self.updateLevelOptions(param))
 		self.tab.levelList.setModel(self.levels)
 
 		self.updateClassOptions(None)
@@ -97,7 +97,7 @@ class SpellBookTab():
 				books.remove(self.books.item(i).data())
 			i += 1
 		for book in books:
-			item = QtGui.QStandardItem(book.book + " (" + book.edition + ")")
+			item = QtGui.QStandardItem(book[0] + " (" + book[1] + ")")
 			item.setData(book)
 			item.setCheckable(True)
 			self.books.appendRow(item)

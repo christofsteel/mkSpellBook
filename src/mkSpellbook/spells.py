@@ -22,7 +22,8 @@ class Spells:
 		query = self.session.query(Spell.book, Spell.edition)
 		query = query.filter(or_(*[Spell.ruleset == ruleset for ruleset in rulesets]))
 		query = query.filter(Spell.classlevels.any(or_(*[ClassLevel.d20class == d20class for d20class in d20classes])))
-		return query.distinct().order_by(Spell.edition, Spell.book).all()
+		result = query.distinct().order_by(Spell.edition, Spell.book).all()
+		return [[book.book, book.edition] for book in result]
 
 	def listLevels(self, rulesets, d20classes, books):
 		query = self.session.query(ClassLevel.level)
