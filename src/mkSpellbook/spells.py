@@ -38,10 +38,10 @@ class Spells:
 		query = query.filter(Spell.s2cl.classlevels.any(d20class = d20class, level = level))
 		return query.all()
 	
-	def listSpellsWithClasslevels(self, ruleset, d20class, book, level):
+	def listSpellsWithClasslevels(self, rulesets = [], d20classes = [], books = [], levels = [], filterstring = ""):
 		query = self.session.query(SpellWithClasslevel)
-		query = query.filter(SpellWithClasslevel.spell.has(Spell.ruleset==ruleset), SpellWithClasslevel.spell.has(Spell.book == book))
-		query = query.filter(SpellWithClasslevel.classlevel.has(ClassLevel.d20class == d20class), SpellWithClasslevel.classlevel.has(ClassLevel.level == level))
+		query = query.filter(SpellWithClasslevel.spell.has(or_(*[Spell.ruleset==ruleset for ruleset in rulesets])), SpellWithClasslevel.spell.has(or_(*[Spell.book == book for book in books])))
+		query = query.filter(SpellWithClasslevel.classlevel.has(or_(*[ClassLevel.d20class == d20class for d20class in d20classes])), SpellWithClasslevel.classlevel.has(or_(*[ClassLevel.level == level for level in levels])))
 		return query.all()
 
 	def listSpellbooks(self):
