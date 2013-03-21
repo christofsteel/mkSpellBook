@@ -8,11 +8,31 @@ from PySide import QtCore, QtGui, QtUiTools
 import sys
 import os
 
+class SpellsPopulateThread(QtCore.QThread):
+	signal = QtCore.Signal(list)
+	def __init__(self,database, parent=None):
+		QtCore.QThread.__init__(self, parent)
+		self.spells = Spells(database)
+
+	def run(self):
+		spells = self.spells.listSpellsWithClasslevels()
+		for spell in spells:
+			print(spell.spell.name)
+			name = QtGui.QStandardItem(spell.spell.name)
+			name.setCheckable(True)
+			d20class = QtGui.QStandardItem(spell.classlevel.d20class)
+			level = QtGui.QStandardItem(spell.classlevel.level)
+			book = QtGui.QStandardItem(spell.spell.book)
+			duration = QtGui.QStandardItem(spell.spell.duration)
+			self.signal.emit([name, d20class, level, duration])
+		
+
 class MkSpellbook():
 	def __init__(self, database, app):
 		self.app = app
 		self.mainWindow = QtUiTools.QUiLoader().load(os.path.join(os.path.dirname(__file__), 'mainWindow.ui'))
 
+		self.database = database
 		self.spells = Spells(database)
 		self.tabs = []
 	
@@ -25,15 +45,16 @@ class MkSpellbook():
 		self.spells.session.add(spellbook)
 	
 	def openSpellbook(self, spellbook):
-		tab = SpellBookTab(self.mainWindow.SpellbookTabs, spellbook, self.spells, self.app)
+		tab = SpellBookTab(self.mainWindow.SpellbookTabs, spellbook, self.spells, self.app, self.database)
 		self.mainWindow.SpellbookTabs.addTab(tab.tab, spellbook.name)
-		tab.populateSpelTable()
+		#tab.populateSpellTable()
 
 class SpellBookTab():
-	def __init__(self, parent, spellbook, spells, app):
+	def __init__(self, parent, spellbook, spells, app, database):
 		self.tab = QtUiTools.QUiLoader().load(os.path.join(os.path.dirname(__file__), 'spellbookview.ui'), parent)
 		self.spellbook = spellbook
 		self.spells = spells
+		self.database = database
 
 		self.rulesets = QtGui.QStandardItemModel(self.tab.rulesetList)
 		self.rulesets.itemChanged.connect(lambda param: self.updateClassOptions(param))
@@ -69,19 +90,13 @@ class SpellBookTab():
 			self.levels.appendRow(item)
 		self.shownspells = QtGui.QStandardItemModel(self.tab.spellTable)
 		self.shownspells.itemChanged.connect(lambda param: self.addToSpellbook)
-
-	def populateSpelTable(self):
-		spells = self.spells.listSpellsWithClasslevels()
-		for spell in spells:
-			name = QtGui.QStandardItem(spell.spell.name)
-			name.setCheckable(True)
-			d20class = QtGui.QStandardItem(spell.classlevel.d20class)
-			level = QtGui.QStandardItem(spell.classlevel.level)
-			book = QtGui.QStandardItem(spell.spell.book)
-			duration = QtGui.QStandardItem(spell.spell.duration)
-			self.shownspells.appendRow([name, d20class, level, duration])
 		self.tab.spellTable.setModel(self.shownspells)
-
+		self.oneSpellsPopulateThread = SpellsPopulateThread(self.database)
+		self.oneSpellsPopulateThread.signal.connect(self.addSpell)
+		self.oneSpellsPopulateThread.start()
+	
+	def addSpell(self, row):
+		self.shownspells.appendRow(row)
 
 	def updateSpellList(self, level):
 		self.levelfilter = []
