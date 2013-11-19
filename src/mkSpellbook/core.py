@@ -77,7 +77,7 @@ class Spellselection(Menu):
 			shownSpellsOff = set(shownspells).difference(set(shownspells))
 			self.spellbook.spells = list(set(self.spellbook.spells).difference(shownSpellsOff).union(shownSpellsOn))
 			self.spells.session.commit()
-			return None
+			return self.asklevel
 		return self.asklevel
 
 class MkSpellbook(Menu):

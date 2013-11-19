@@ -7,6 +7,7 @@ import os
 import os.path
 import shutil
 import tempfile
+import traceback
 from mkSpellbook.spells import Spells
 from mkSpellbook.models import *
 
@@ -29,7 +30,8 @@ class Genlatex:
 			"<li>": r"\\item ",
 			"</li>": r"\n",
 			"<ul>": r"\\begin{itemize}\n",
-			"<br/>|<p>": r"\\\\ \n",
+			"<br/>": r"\\\\ \n",
+			"</p>": r"\\\\ \n",
 			"</ul>(\s|<br/>|<p>)*": r"\\end{itemize}\n",
 			"<em>": r"\\textit{",
 			"<a[^>]*>|</a>": r"",
@@ -44,10 +46,10 @@ class Genlatex:
 			"<span[^>]*>|</span>":r"",
 			"<table>.*</table>": r"TODO Tabelle parsen"
 			}
-		string = re.sub("^\s*<p>|&#13;|</p>|\r|\n|\t", "", string)
+		string = re.sub("^\s*<p>|&#13;|<p>|\r|\n|\t", "", string)
 		string = re.sub("&amp;", "&", string)
 		for k, v in replacements.items():
-			string = re.sub(k, v, string, flags=re.UNICODE)
+			string = re.sub(k, v, string, flags=re.M)
 		return string
 	
 	def genlatex(self, spellbook, templatepath, output):
@@ -60,6 +62,20 @@ class Genlatex:
 			templogo.close()
 
 
+		try:
+			with open(templatepath + 'resources', 'r') as resourcesfile:
+				resources = [r.strip() for r in resourcesfile.readlines()]
+				for resource in resources:
+					try:
+						print(os.path.join(temppath.name,resource))
+						print(os.path.join(templatepath,resource))
+						shutil.copy(os.path.join(templatepath,resource),os.path.join(temppath.name,
+							resource))
+					except Exception:
+						print("Something went wrong copying %s" % resource)
+						traceback.print_exc()
+		except Exception:
+			print("Could not read resources")
 		template = open(templatepath + 'spell.tex', 'r')
 		templatestring = template.read()
 		template.close()
@@ -79,10 +95,12 @@ class Genlatex:
 		temptex.write(tail.read())
 		tail.close()
 		temptex.close()
-
+		cwd = os.getcwd()
+		os.chdir(temppath.name)
 		subprocess.call(["pdflatex", "-output-directory", temppath.name, temptex.name])
 		subprocess.call(["pdflatex", "-output-directory", temppath.name, temptex.name])
 		subprocess.call(["pdflatex", "-output-directory", temppath.name, temptex.name])
+		os.chdir(cwd)
 		
 		pdfname = os.path.splitext(temptex.name)[0] + ".pdf"
 		shutil.copy(pdfname, output)

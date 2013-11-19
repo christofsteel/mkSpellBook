@@ -3,13 +3,15 @@
 Generate and organize Spellbooks for d20 based role playing games.
 
 ## Prerequirements ##
+ Blablabla
+  Blablabl
 
-You need python3, pyquery, sqlite3 and sqlalchemy. 
+You need python3, pyquery, sqlite3 and sqlalchemy.
 If you want to use the fancy or fancybw template, you need [pfgornaments](http://altermundus.com/pages/tkz/ornament/index.html).
 
 ## Install ##
 
-Install using easy_install, pip or simply run `python setup.py install` 
+Install using easy_install, pip or simply run `python setup.py install`
 If you are using Arch Linux, you can use the PKGBUILD
 
 ## Usage ##
@@ -24,7 +26,7 @@ and add spells via the import scripts.
 
 ### Templates ###
 
-mkSpellbook is shipped with 3 templates: plain, fancy, fancybw 
+mkSpellbook is shipped with 3 templates: plain, fancy, fancybw
 To create a template add a folder in `~/.mkspellbook/templates` with at least 3 files:
 
   * head.tex
@@ -39,7 +41,7 @@ You can use a variable with `[[var]]`. If you want to check, if a variable exist
 head.tex is inserted at the start of your spellbook
 Variables:
 
-  * title 
+  * title
   * author
   * logo
 
@@ -77,13 +79,13 @@ tail.tex is inserted at the end of your spellbook.
 
 ### Import Scripts ###
 
-To create your own importscripts, add a pythonfile `script_YOURSCRIPT.py` to `~/.mkspellbook/importscripts`. 
+To create your own importscripts, add a pythonfile `script_YOURSCRIPT.py` to `~/.mkspellbook/importscripts`.
 It should have a function called `runimport(database)`.
 
 ### Print as booklet ###
 If you want to generate a booklet, this might help:
 
-    pdf2ps yourspellbook.pdf 
+    pdf2ps yourspellbook.pdf
     psbook yourspellbook.ps yourspellbook_book.ps
     psnup -s1 -2 yourspellbook_book.ps yourspellbook_booklet.ps
     ps2pdf yourspellbook_booklet.ps yourspellbook_booklet.pdf

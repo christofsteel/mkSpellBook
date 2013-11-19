@@ -1,14 +1,17 @@
-\documentclass[table,10pt,a4paper,twocolumn]{book}
+\documentclass[table,10pt,a4paper,twocolumn]{scrbook}
 \usepackage[utf8x]{inputenc}
 \usepackage[usenames,dvipsnames]{xcolor}
-\usepackage{pgfornament}
-\usepackage[a4paper,left=1cm, right=1cm, top=1.5cm, bottom=1.5cm]{geometry}
-\usepackage{supertabular}
+\usepackage{graphicx}
+\usepackage[a4paper,left=1.5cm, right=1.5cm, top=2cm, bottom=2cm]{geometry}
+\usepackage{xtab}
+\usepackage{everyshi}
+\usepackage{afterpage}
 \usepackage{amssymb}
 \usepackage{eso-pic}
 \usepackage{titlesec}
 \usepackage{fancyhdr}
 \setlength{\headheight}{15.2pt}
+\setlength{\columnsep}{1cm}
 \titlespacing*{\chapter}{0pt}{-20pt}{20pt}
 \titleformat{\chapter}[display]{\normalfont\huge\scshape\centering}{}{20pt}{\Huge\scshape}
 \fancypagestyle{empty}{%
@@ -25,14 +28,18 @@
 \makeatletter
 \AddToShipoutPicture{%
 \begingroup
-\put(\LenToUnit{2mm},\LenToUnit{\dimexpr \paperheight-2mm\relax}){%
-\pgfornament[anchor=north west,width=1.5cm]{31}}
+\put(\LenToUnit{2mm},\LenToUnit{\dimexpr \paperheight-2mm-1.5cm\relax}){%
+\includegraphics{lo.pdf}%
+}
 \put(\LenToUnit{2mm},\LenToUnit{2mm}){%
-\pgfornament[anchor=south west,width=1.5cm,symmetry=h]{31}}
-\put(\LenToUnit{\dimexpr \paperwidth-2mm-1.5cm\relax},\LenToUnit{\dimexpr \paperheight-2mm\relax}){%
-\pgfornament[anchor=north east,width=1.5cm,symmetry=v]{31}}
+\includegraphics{lu.pdf}%
+}
+\put(\LenToUnit{\dimexpr \paperwidth-2mm-1.5cm\relax},\LenToUnit{\dimexpr \paperheight-2mm-1.5cm\relax}){%
+\includegraphics{ro.pdf}%
+}
 \put(\LenToUnit{\dimexpr \paperwidth-2mm-1.5cm\relax},\LenToUnit{2mm}){%
-\pgfornament[anchor=south east,width=1.5cm,symmetry=c]{31}}
+\includegraphics{ru.pdf}%
+}
 \endgroup
 }
 \makeatother
