@@ -3,12 +3,12 @@
 \usepackage[usenames,dvipsnames]{xcolor}
 \usepackage{graphicx}
 \usepackage[a4paper,left=1.5cm, right=1.5cm, top=2cm, bottom=2cm]{geometry}
-\usepackage{xtab}
-\usepackage{everyshi}
-\usepackage{afterpage}
+\usepackage{array}
 \usepackage{amssymb}
 \usepackage{eso-pic}
+\usepackage{titling}
 \usepackage{titlesec}
+\usepackage{calligra}
 \usepackage{fancyhdr}
 \setlength{\headheight}{15.2pt}
 \setlength{\columnsep}{1cm}
@@ -47,8 +47,9 @@
 \DeclareUnicodeCharacter{64258}{fl}
 \renewcommand{\chaptermark}[1]{\markboth{#1}{}}
 
-\title{[[title]][[?logo|\vspace{5mm}\\\includegraphics{[[logo]]}?]]}
-\author{[[author]]}
+\title{\Huge\calligra [[title]][[?logo|\vspace{5mm}\\\includegraphics{[[logo]]}?]]}
+\author{\calligra [[author]]}
+\date{}
 
 \begin{document}
 \maketitle
