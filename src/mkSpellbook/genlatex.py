@@ -8,8 +8,7 @@ import os.path
 import shutil
 import tempfile
 import traceback
-from mkSpellbook.spells import Spells
-from mkSpellbook.models import *
+#from mkSpellbook.models import *
 
 class Genlatex:
 	def __init__(self):
@@ -26,13 +25,14 @@ class Genlatex:
 		return replaced
 
 	def texify(self, string):
-		replacements = {
+		round1 = {
+			"</ul>(\s|<br />|<br/>|</p>)*": r"\\end{itemize}\n"
+				}
+		round2 = {
 			"<li>": r"\\item ",
 			"</li>": r"\n",
 			"<ul>": r"\\begin{itemize}\n",
-			"<br/>": r"\\\\ \n",
-			"</p>": r"\\\\ \n",
-			"</ul>(\s|<br/>|<p>)*": r"\\end{itemize}\n",
+			"\s*(<br />\s*|<br/>\s*|</p>\s*)+": r"\\\\ \n",
 			"<em>": r"\\textit{",
 			"<a[^>]*>|</a>": r"",
 			"<sup>": r"\\textsuperscript{",
@@ -44,13 +44,16 @@ class Genlatex:
 			"_": r"\\_",
 			"×": r"x",
 			"<span[^>]*>|</span>":r"",
-			"<table>.*</table>": r"TODO Tabelle parsen"
+			"<table>.*</table>": r""
 			}
 		string = re.sub("^\s*<p>|&#13;|<p>|\r|\n|\t", "", string)
 		string = re.sub("&amp;", "&", string)
-		for k, v in replacements.items():
-			string = re.sub(k, v, string, flags=re.M)
-		return string
+		for k, v in round1.items():
+			string = re.sub(k, v, string.strip(), flags=re.M)
+		for k, v in round2.items():
+			string = re.sub(k, v, string.strip(), flags=re.M)
+		string = re.sub("<[^>]*>", "", string)
+		return string.strip()
 	
 	def genlatex(self, spellbook, templatepath, output):
 		temppath = tempfile.TemporaryDirectory(prefix="mkSpellbook-")
@@ -67,8 +70,6 @@ class Genlatex:
 				resources = [r.strip() for r in resourcesfile.readlines()]
 				for resource in resources:
 					try:
-						print(os.path.join(temppath.name,resource))
-						print(os.path.join(templatepath,resource))
 						shutil.copy(os.path.join(templatepath,resource),os.path.join(temppath.name,
 							resource))
 					except Exception:
