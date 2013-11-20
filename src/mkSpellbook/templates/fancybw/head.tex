@@ -1,0 +1,56 @@
+\documentclass[table,10pt,a4paper,twocolumn]{scrbook}
+\usepackage[utf8x]{inputenc}
+\usepackage[usenames,dvipsnames]{xcolor}
+\usepackage{graphicx}
+\usepackage[a4paper,left=1.5cm, right=1.5cm, top=2cm, bottom=2cm]{geometry}
+\usepackage{array}
+\usepackage{amssymb}
+\usepackage{eso-pic}
+\usepackage{titling}
+\usepackage{titlesec}
+\usepackage{calligra}
+\usepackage{fancyhdr}
+\setlength{\headheight}{15.2pt}
+\setlength{\columnsep}{1cm}
+\titlespacing*{\chapter}{0pt}{-20pt}{20pt}
+\titleformat{\chapter}[display]{\normalfont\huge\scshape\centering}{}{20pt}{\Huge\scshape}
+\fancypagestyle{empty}{%
+\renewcommand{\headrulewidth}{0pt}%
+\fancyhf{}
+\chead{\scshape\large\leftmark}%
+\cfoot{\thepage}%
+}
+
+\pagestyle{empty}
+
+\makeatletter
+\AddToShipoutPicture{%
+\begingroup
+\put(\LenToUnit{2mm},\LenToUnit{\dimexpr \paperheight-2mm-1.5cm\relax}){%
+\includegraphics{lo.pdf}%
+}
+\put(\LenToUnit{2mm},\LenToUnit{2mm}){%
+\includegraphics{lu.pdf}%
+}
+\put(\LenToUnit{\dimexpr \paperwidth-2mm-1.5cm\relax},\LenToUnit{\dimexpr \paperheight-2mm-1.5cm\relax}){%
+\includegraphics{ro.pdf}%
+}
+\put(\LenToUnit{\dimexpr \paperwidth-2mm-1.5cm\relax},\LenToUnit{2mm}){%
+\includegraphics{ru.pdf}%
+}
+\endgroup
+}
+\makeatother
+
+\DeclareUnicodeCharacter{64258}{fl}
+\renewcommand{\chaptermark}[1]{\markboth{#1}{}}
+
+\title{\Huge\calligra [[title]][[?logo|\vspace{5mm}\\\includegraphics{[[logo]]}?]]}
+\author{\calligra [[author]]}
+\date{}
+
+\begin{document}
+\maketitle
+\tableofcontents
+\setcounter{chapter}{-1}
+
