@@ -72,9 +72,9 @@ class Spellselection(Menu):
 		spellschoice = [(i, spell.spell.name, 
 				"on" if spell in self.spellbook.spells else "off") for i, spell in self.mkSelection(shownspells)]
 		src, sch = self.d.checklist("Select Spells", spellschoice)
-		if sch and not src:
+		if not src:
 			shownSpellsOn = set([shownspells[int(sid)-1] for sid in sch.split()])
-			shownSpellsOff = set(shownspells).difference(set(shownspells))
+			shownSpellsOff = set(shownspells).difference(shownSpellsOn)
 			self.spellbook.spells = list(set(self.spellbook.spells).difference(shownSpellsOff).union(shownSpellsOn))
 			self.spells.session.commit()
 			return self.asklevel
